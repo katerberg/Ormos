@@ -10,5 +10,10 @@
     "preserveConstEnums": true,
     "sourceMap": true
   },
-  "include": ["./.eslintrc.js", "./src/**/*", "./server/**/*", "./types/**/*"]
+  "include": [
+    "./.eslintrc.js",
+    "./server/**/*",
+    "./src/**/*",
+    "./types/**/*"
+  ]
 }

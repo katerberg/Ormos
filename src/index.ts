@@ -17,13 +17,9 @@ function submitListener(e: Event): void {
       validationMessage.textContent = '';
     }
 
-    fetchSetsForCards(cardInput.value)
-      .then((result) => {
-        console.log(result);
-      })
-      .catch((err) => {
-        console.warn(err);
-      });
+    fetchSetsForCards(cardInput.value).then((result) => {
+      console.log(result);
+    });
     // perform operation with form input
     //   console.log(`This form has a username of ${username.value} and password of ${password.value}`);
 
