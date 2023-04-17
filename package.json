@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config ./webpack.config.js --mode production",
+    "fetch:allPrintings": "curl https://mtgjson.com/api/v5/AllPrintings.sql > data/AllPrintings.sqlite",
     "start:stable": "concurrently -k 'npm run start:stable-server' 'npm run start:stable-ui'",
     "start:stable-server": "tsc -p ./server-tsconfig.json server/index.ts && node server/index.js 9081",
     "start:stable-ui": "NODE_ENV=production webpack-dev-server --config ./webpack.config.js --mode development",
     "start": "concurrently -k 'npm run start:server' 'npm run start:ui'",
-    "start:server": "ENV=development nodemon --max-old-space-size=9096 server/index.ts -- 8081",
+    "start:server": "ENV=development nodemon server/index.ts -- 8081",
     "start:ui": "webpack-dev-server --config ./webpack.config.js --mode development",
     "lint": "npm run lint:base -- --fix",
     "lint:ci": "npm run lint:base",
