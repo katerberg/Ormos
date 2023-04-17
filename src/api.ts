@@ -1,6 +1,6 @@
 import axios from 'axios';
+import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {API_BASE} from './constants';
-import {SetForCards} from './sharedTypes';
 
 type ErrorResponse = {
   error: string;
@@ -13,8 +13,9 @@ function cardListToJson(cardList: string): string[] {
     .map((c) => c.trim());
 }
 
-export async function fetchSetsForCards(cardList: string): Promise<{data: SetForCards[]; error: string | null}> {
-  let response: SetForCards[] = [];
+export async function fetchSetsForCards(
+  cardList: string,
+): Promise<{data: SetsForCardsResponseData[]; error: string | null}> {
   let error: string | null = null;
   try {
     const axiosCall = await axios.post(`${API_BASE}/setsForCards`, cardListToJson(cardList), {
@@ -22,13 +23,13 @@ export async function fetchSetsForCards(cardList: string): Promise<{data: SetFor
         'Content-Type': 'application/json',
       },
     });
-    response = axiosCall.data;
+    return axiosCall.data;
   } catch (e) {
     if (axios.isAxiosError(e) && e.response) {
       ({error} = e.response?.data as ErrorResponse);
     } else {
       error = 'Unknown error';
     }
+    return {data: [], error};
   }
-  return {data: response, error};
 }

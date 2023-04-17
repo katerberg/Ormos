@@ -1,7 +1,51 @@
 import './index.scss';
+import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
 
-function submitListener(e: Event): void {
+function handleSetsForCardsResponse(result: {data: SetsForCardsResponseData[]; error: string | null}): void {
+  const validationMessage = document.getElementById('validation-message');
+  if (result.error && validationMessage) {
+    validationMessage.classList.add('error');
+    validationMessage.textContent = result.error;
+    return;
+  }
+  const rollUp = document.getElementById('card-search-roll-up');
+  if (rollUp) {
+    const sets: {[key: string]: {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}}} =
+      {};
+    result.data.forEach((card) => {
+      card.sets.forEach((set) => {
+        const code = set.parent || set.code;
+        if (!sets[code]) {
+          sets[code] = {
+            code,
+            displayName: set.name,
+            releaseDate: set.releaseDate,
+            cards: {},
+          };
+        }
+        sets[code].cards[card.name] = true;
+      });
+    });
+    rollUp.innerHTML = `
+    <ul class="set-list">
+      ${Object.values(sets)
+        .sort((a, b) => (a.releaseDate > b.releaseDate ? -1 : 1))
+        .map(
+          (set) => `
+        <li>${set.code} - ${set.displayName}</li>
+        <ul class="card-list">${Object.keys(set.cards)
+          .map((card) => `<li>${card}</li>`)
+          .join('')}</ul>
+        `,
+        )
+        .join('')}
+    </ul>
+    `;
+  }
+}
+
+async function submitListener(e: Event): Promise<void> {
   e.preventDefault();
 
   const cardInput = document.getElementById('card-input') as HTMLInputElement;
@@ -17,14 +61,8 @@ function submitListener(e: Event): void {
       validationMessage.textContent = '';
     }
 
-    fetchSetsForCards(cardInput.value).then((result) => {
-      console.log(result);
-    });
-    // perform operation with form input
-    //   console.log(`This form has a username of ${username.value} and password of ${password.value}`);
-
-    //   username.value = '';
-    //   password.value = '';
+    const response = await fetchSetsForCards(cardInput.value);
+    handleSetsForCardsResponse(response);
   }
 }
 
