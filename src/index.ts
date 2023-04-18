@@ -2,39 +2,29 @@ import './index.scss';
 import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
 
-function handleSetsForCardsResponse(result: {data: SetsForCardsResponseData[]; error: string | null}): void {
-  const cardTextArea = document.getElementById('card-input');
-  if (cardTextArea) {
-    cardTextArea.classList.remove('collapsed');
-  }
-  const validationMessage = document.getElementById('validation-message');
-  if (result.error && validationMessage) {
-    validationMessage.classList.add('error');
-    validationMessage.textContent = result.error;
+function populateRollUp(data: SetsForCardsResponseData[]): void {
+  const rollUp = document.getElementById('card-search-roll-up');
+  if (!rollUp) {
     return;
   }
-  if (cardTextArea) {
-    cardTextArea.classList.add('collapsed');
-  }
-  const rollUp = document.getElementById('card-search-roll-up');
-  if (rollUp) {
-    const sets: {[key: string]: {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}}} =
-      {};
-    result.data.forEach((card) => {
-      card.sets.forEach((set) => {
-        const code = set.parent || set.code;
-        if (!sets[code]) {
-          sets[code] = {
-            code,
-            displayName: set.name,
-            releaseDate: set.releaseDate,
-            cards: {},
-          };
-        }
-        sets[code].cards[card.name] = true;
-      });
+
+  const sets: {[key: string]: {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}}} =
+    {};
+  data.forEach((card) => {
+    card.sets.forEach((set) => {
+      const code = set.parent || set.code;
+      if (!sets[code]) {
+        sets[code] = {
+          code,
+          displayName: set.name,
+          releaseDate: set.releaseDate,
+          cards: {},
+        };
+      }
+      sets[code].cards[card.name] = true;
     });
-    rollUp.innerHTML = `
+  });
+  rollUp.innerHTML = `
     <ul class="set-list">
       ${Object.values(sets)
         .sort((a, b) => (a.releaseDate > b.releaseDate ? -1 : 1))
@@ -49,7 +39,23 @@ function handleSetsForCardsResponse(result: {data: SetsForCardsResponseData[]; e
         .join('')}
     </ul>
     `;
+}
+
+function handleSetsForCardsResponse(result: {data: SetsForCardsResponseData[]; error: string | null}): void {
+  const cardTextArea = document.getElementById('card-input');
+  if (cardTextArea) {
+    cardTextArea.classList.remove('collapsed');
   }
+  const validationMessage = document.getElementById('validation-message');
+  if (result.error && validationMessage) {
+    validationMessage.classList.add('error');
+    validationMessage.textContent = result.error;
+    return;
+  }
+  if (cardTextArea) {
+    cardTextArea.classList.add('collapsed');
+  }
+  populateRollUp(result.data);
 }
 
 async function submitListener(e: Event): Promise<void> {
