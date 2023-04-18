@@ -120,10 +120,15 @@ h1 {
   border-radius: 0.4rem;
   width: 100%;
 
+  .set-list {
+    padding: 1rem;
+  }
+
   details {
     transition: margin 150ms ease-out;
 
     >summary {
+      cursor: pointer;
       font-size: 2rem;
     }
 
