@@ -2,14 +2,28 @@ import './index.scss';
 import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
 
+type SetOfCards = {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}};
+
+function sortingFunction(a: SetOfCards, b: SetOfCards): -1 | 0 | 1 {
+  const aLength = Object.keys(a.cards).length;
+  const bLength = Object.keys(b.cards).length;
+  if (aLength > bLength) {
+    return -1;
+  } else if (aLength < bLength) {
+    return 1;
+  }
+  // return 0;
+  return a.releaseDate < b.releaseDate ? 1 : -1;
+  // return 0;
+}
+
 function populateRollUp(data: SetsForCardsResponseData[]): void {
   const rollUp = document.getElementById('card-search-roll-up');
   if (!rollUp) {
     return;
   }
 
-  const sets: {[key: string]: {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}}} =
-    {};
+  const sets: {[key: string]: SetOfCards} = {};
   data.forEach((card) => {
     card.sets.forEach((set) => {
       const code = set.parent || set.code;
@@ -27,12 +41,13 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
   rollUp.innerHTML = `
     <div class="set-list">
       ${Object.values(sets)
-        .sort((a, b) => (a.releaseDate > b.releaseDate ? -1 : 1))
+        .sort(sortingFunction)
         .map(
           (set) => `
         <details open>
           <summary>${set.code} - ${set.displayName}</summary>
           <ul class="card-list">${Object.keys(set.cards)
+            .sort((a, b) => (a < b ? -1 : 1))
             .map((card) => `<li>${card}</li>`)
             .join('')}</ul>
         </details>
