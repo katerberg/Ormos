@@ -10,22 +10,10 @@ const db = new sqlite3.Database('./data/AllPrintings.sqlite', (err) => {
   console.log('connected to db');
 });
 
-export function addRoutes(app: express.Express): void {
-  const jsonParser = bodyParser.json();
-
-  app.post('/api/setsForCards', jsonParser, async (req, res) => {
-    const requestCards = (req.body as string[]).map((c) => c?.toLowerCase());
-    if (requestCards.length > 500) {
-      return res.status(400).send({data: null, error: 'Too many cards'});
-    }
-
-    const cards: SetsForCardsResponseData[] = [];
-    const errorCards: string[] = [];
-    const requestPromises: Promise<unknown>[] = [];
-    requestCards.forEach((requestCard) => {
-      const promise = new Promise((resolvePromise): void => {
-        db.all(
-          `
+async function getCardInfo(cardName: string): Promise<SetsForCardsResponseData> {
+  const promise = new Promise<SetsForCardsResponseData>((resolvePromise, rejectPromise): void => {
+    db.all(
+      `
           SELECT
             cards.name,
             sets.code,
@@ -40,34 +28,63 @@ export function addRoutes(app: express.Express): void {
             AND sets.isOnlineOnly = 0
           GROUP BY code, parentCode
            `,
-          [requestCard],
-          (err, result: {parentCode: string | null; code: string; setName: string; releaseDate: Date}[]) => {
-            if (err) {
-              console.error(err.message);
-              return res
-                .status(500)
-                .send({data: null, error: `Unknown error. Contact creator about "${requestCard}".`});
-            }
-            if (result.length === 0) {
-              errorCards.push(requestCard);
-            }
-            cards.push({
-              name: requestCard,
-              sets: result.map((r) => ({
-                code: r.code,
-                parent: r.parentCode,
-                name: r.setName,
-                releaseDate: r.releaseDate,
-              })),
-            });
+      [cardName],
+      (err, result: {parentCode: string | null; code: string; setName: string; releaseDate: Date}[]) => {
+        if (err) {
+          console.error(err.message);
+          rejectPromise(`Unknown error. Contact creator about "${cardName}".`);
+        }
+        if (result.length === 0) {
+          resolvePromise({
+            name: cardName,
+            sets: [],
+          });
+        }
 
-            resolvePromise(null);
-          },
-        );
-      });
-      requestPromises.push(promise);
+        resolvePromise({
+          name: cardName,
+          sets: result.map((r) => ({
+            code: r.code,
+            parent: r.parentCode,
+            name: r.setName,
+            releaseDate: r.releaseDate,
+          })),
+        });
+      },
+    );
+  });
+  return promise;
+}
+
+export function addRoutes(app: express.Express): void {
+  const jsonParser = bodyParser.json();
+
+  app.post('/api/setsForCards', jsonParser, async (req, res) => {
+    const requestCards = (req.body as string[]).map((c) => c?.toLowerCase());
+    if (requestCards.length > 500) {
+      return res.status(400).send({data: null, error: 'Too many cards'});
+    }
+
+    const cards: SetsForCardsResponseData[] = [];
+    const errorCards: string[] = [];
+    const requestPromises: Promise<unknown>[] = [];
+    requestCards.forEach((requestCard) => {
+      requestPromises.push(getCardInfo(requestCard));
     });
-    await Promise.all(requestPromises);
+    let promiseResults;
+    try {
+      promiseResults = await Promise.all(requestPromises);
+    } catch (e) {
+      console.error(`Unknown issue in promise for cards: ${requestCards}:`, e);
+      return res.status(500).send({data: null, error: 'Unknown error. Contact creator.'});
+    }
+    (promiseResults as SetsForCardsResponseData[]).forEach((result) => {
+      if (result.sets.length === 0) {
+        errorCards.push(result.name);
+      } else {
+        cards.push(result);
+      }
+    });
     if (errorCards.length) {
       const errorString = `Cards not found: ${errorCards.reduce((a, c) => `“${a}”,“${c}”`)}`;
       return res.status(400).send({data: null, error: errorString});
