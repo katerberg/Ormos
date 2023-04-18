@@ -3,11 +3,18 @@ import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
 
 function handleSetsForCardsResponse(result: {data: SetsForCardsResponseData[]; error: string | null}): void {
+  const cardTextArea = document.getElementById('card-input');
+  if (cardTextArea) {
+    cardTextArea.classList.remove('collapsed');
+  }
   const validationMessage = document.getElementById('validation-message');
   if (result.error && validationMessage) {
     validationMessage.classList.add('error');
     validationMessage.textContent = result.error;
     return;
+  }
+  if (cardTextArea) {
+    cardTextArea.classList.add('collapsed');
   }
   const rollUp = document.getElementById('card-search-roll-up');
   if (rollUp) {
