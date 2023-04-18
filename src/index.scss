@@ -2,9 +2,87 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+@mixin blue-background {
+  background:
+	radial-gradient(
+			at bottom right,
+			dodgerblue 0,
+			dodgerblue 1em,
+			lightskyblue 1em,
+			lightskyblue 2em,
+			deepskyblue 2em,
+			deepskyblue 3em,
+			gainsboro 3em,
+			gainsboro 4em,
+			lightsteelblue 4em,
+			lightsteelblue 5em,
+			deepskyblue 5em,
+			deepskyblue 6em,
+			lightskyblue 6em,
+			lightskyblue 7em,
+			transparent 7em,
+			transparent 8em
+		),
+		radial-gradient(
+			at top left,
+			transparent 0,
+			transparent 1em,
+			lightskyblue 1em,
+			lightskyblue 2em,
+			deepskyblue 2em,
+			deepskyblue 3em,
+			lightsteelblue 3em,
+			lightsteelblue 4em,
+			gainsboro 4em,
+			gainsboro 5em,
+			deepskyblue 5em,
+			deepskyblue 6em,
+			skyblue 6em,
+			skyblue 7em,
+			dodgerblue 7em,
+			dodgerblue 8em,
+			transparent 8em,
+			transparent 20em
+		),
+		radial-gradient(
+			circle at center bottom,
+			#ccdfe4, #4784a3
+		);
+	
+	background-blend-mode: overlay;
+	background-size:
+		8em 8em, 8em 8em, cover;
+}
+
+@font-face {
+  font-family: 'Libre Franklin';
+  font-style: normal;
+  font-weight: normal;
+  src:
+    url('./assets/fonts/Libre_Franklin/LibreFranklin-VariableFont_wght.ttf');
+}
+
+html {
+  font-family: 'Libre Franklin', sans-serif;
   color: black;
+  @include blue-background;
+}
+
+html,body {
+  min-height: 100%;
+}
+
+main {
+  margin-top: 1rem;
+
+  & > * {
+    max-width: 40rem;
+    margin: auto;
+  }
+}
+
+h1 {
+
 }
 
 #card-search-form {
