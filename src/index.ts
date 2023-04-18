@@ -25,19 +25,21 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
     });
   });
   rollUp.innerHTML = `
-    <ul class="set-list">
+    <div class="set-list">
       ${Object.values(sets)
         .sort((a, b) => (a.releaseDate > b.releaseDate ? -1 : 1))
         .map(
           (set) => `
-        <li>${set.code} - ${set.displayName}</li>
-        <ul class="card-list">${Object.keys(set.cards)
-          .map((card) => `<li>${card}</li>`)
-          .join('')}</ul>
+        <details open>
+          <summary>${set.code} - ${set.displayName}</summary>
+          <ul class="card-list">${Object.keys(set.cards)
+            .map((card) => `<li>${card}</li>`)
+            .join('')}</ul>
+        </details>
         `,
         )
         .join('')}
-    </ul>
+    </div>
     `;
 }
 
