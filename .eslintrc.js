@@ -2,6 +2,7 @@ module.exports = {
   env: {
     node: true,
     es6: true,
+    'jest/globals': true,
   },
   root: true,
   parser: '@typescript-eslint/parser',
@@ -14,6 +15,13 @@ module.exports = {
       modules: true,
     },
   },
+  overrides: [
+    {
+      files: ['**/*.test.js'],
+      plugins: ['jest'],
+      extends: ['plugin:jest/recommended'],
+    },
+  ],
   plugins: ['@typescript-eslint', 'prettier', 'import'],
   extends: [
     'eslint:recommended',
