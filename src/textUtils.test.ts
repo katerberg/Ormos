@@ -20,6 +20,12 @@ describe('trimLine', () => {
     expect(trimLine('Ognis, the dragon‘s lash')).toEqual("Ognis, the dragon's lash");
   });
 
+  it('trims parenthesized values', () => {
+    expect(trimLine('Clearwater Pathway // Murkwater Pathway (znr)')).toEqual(
+      'Clearwater Pathway // Murkwater Pathway',
+    );
+  });
+
   it('recursively trims until the same string comes back', () => {
     expect(trimLine('1 6   5 Black lotus')).toEqual('Black lotus');
   });

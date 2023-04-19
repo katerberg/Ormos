@@ -4,8 +4,9 @@ export function trimLine(line: string): string {
   const numberSuffixRegex = new RegExp('\\S*\\d$');
   const deNumberedLine = trimmedLine.replace(numberPrefixRegex, '').replace(numberSuffixRegex, '');
   const deQuotedLine = deNumberedLine.replace('‘', "'").replace('’', "'");
+  const deParenthesizedLine = deQuotedLine.replace(/\([^)]*\)/, '');
 
-  const newLine = deQuotedLine;
+  const newLine = deParenthesizedLine;
   if (newLine !== line) {
     return trimLine(newLine);
   }

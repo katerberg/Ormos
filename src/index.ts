@@ -92,6 +92,7 @@ async function submitListener(e: Event): Promise<void> {
       validationMessage.textContent = '';
     }
     const cleanedInput = getLines(cardInput.value).map(trimLine).join('\n');
+    cardInput.value = cleanedInput;
 
     const response = await fetchSetsForCards(cleanedInput);
     handleSetsForCardsResponse(response);
