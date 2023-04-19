@@ -1,6 +1,7 @@
 import './index.scss';
 import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
+import {getLines, trimLine} from './textUtils';
 
 type SetOfCards = {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}};
 
@@ -90,8 +91,9 @@ async function submitListener(e: Event): Promise<void> {
       validationMessage.classList.remove('error');
       validationMessage.textContent = '';
     }
+    const cleanedInput = getLines(cardInput.value).map(trimLine).join('\n');
 
-    const response = await fetchSetsForCards(cardInput.value);
+    const response = await fetchSetsForCards(cleanedInput);
     handleSetsForCardsResponse(response);
   }
 }

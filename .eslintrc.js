@@ -141,7 +141,6 @@ module.exports = {
     'operator-assignment': 'error',
     'operator-linebreak': ['error', 'after'],
     'quote-props': ['error', 'as-needed'],
-    quotes: ['error', 'single'],
     'semi-spacing': 'error',
     semi: 'error',
     'space-infix-ops': 'error',

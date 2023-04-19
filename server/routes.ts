@@ -86,7 +86,7 @@ export function addRoutes(app: express.Express): void {
       }
     });
     if (errorCards.length) {
-      const errorString = `Cards not found: ${errorCards.reduce((a, c) => `“${a}”,“${c}”`)}`;
+      const errorString = `Cards not found: “${errorCards.reduce((a, c) => `${a}”,“${c}`)}”`;
       return res.status(400).send({data: null, error: errorString});
     }
 
