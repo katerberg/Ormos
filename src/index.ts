@@ -1,9 +1,8 @@
 import './index.scss';
 import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
+import {SetOfCards, SetsForCardsResponse} from './sharedTypes';
 import {getLines, trimLine} from './textUtils';
-
-type SetOfCards = {code: string; displayName: string; releaseDate: Date; cards: {[key2: string]: true}};
 
 function sortingFunction(a: SetOfCards, b: SetOfCards): -1 | 0 | 1 {
   const aLength = Object.keys(a.cards).length;
@@ -23,20 +22,22 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
   }
 
   const sets: {[key: string]: SetOfCards} = {};
-  data.forEach((card) => {
-    card.sets.forEach((set) => {
-      const code = set.parent || set.code;
-      if (!sets[code]) {
-        sets[code] = {
-          code,
-          displayName: set.name,
-          releaseDate: set.releaseDate,
-          cards: {},
-        };
-      }
-      sets[code].cards[card.name] = true;
+  data
+    .filter((card) => !globalThis.pulledCards.includes(card.name))
+    .forEach((card) => {
+      card.sets.forEach((set) => {
+        const code = set.parent || set.code;
+        if (!sets[code]) {
+          sets[code] = {
+            code,
+            displayName: set.name,
+            releaseDate: set.releaseDate,
+            cards: {},
+          };
+        }
+        sets[code].cards[card.name] = true;
+      });
     });
-  });
   rollUp.innerHTML = `
     <div class="set-list">
       ${Object.values(sets)
@@ -57,7 +58,7 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
     `;
 }
 
-function handleSetsForCardsResponse(result: {data: SetsForCardsResponseData[]; error: string | null}): void {
+function handleSetsForCardsResponse(result: SetsForCardsResponse): void {
   const cardTextArea = document.getElementById('card-input');
   if (cardTextArea) {
     cardTextArea.classList.remove('collapsed');
@@ -96,6 +97,7 @@ async function submitListener(e: Event): Promise<void> {
     cardInput.value = cleanedInput;
 
     const response = await fetchSetsForCards(cleanedInput);
+    globalThis.latestSetsForCardsResponse = response;
     handleSetsForCardsResponse(response);
   }
 }
@@ -121,6 +123,7 @@ function clearPulledCardsListener(e: Event): void {
   e.preventDefault();
   globalThis.pulledCards = [];
   populatePulledCards();
+  handleSetsForCardsResponse(globalThis.latestSetsForCardsResponse);
 }
 
 function rollUpClickListener(e: Event): void {
@@ -129,6 +132,7 @@ function rollUpClickListener(e: Event): void {
     if (!globalThis.pulledCards.includes(target.textContent)) {
       globalThis.pulledCards.push(target.textContent);
       populatePulledCards();
+      handleSetsForCardsResponse(globalThis.latestSetsForCardsResponse);
     }
   }
 }
