@@ -74,7 +74,13 @@ body {
 main {
   margin-top: 1rem;
 
-  &>* {
+  .form-wrapper {
+    display: flex;
+    flex-direction: row;
+  }
+
+  form {
+    flex-grow: 1;
     max-width: 40rem;
     margin: auto;
   }
@@ -95,6 +101,12 @@ main {
     border-top-right-radius: 0.4rem;
     border-top-left-radius: 0.4rem;
 
+    >div {
+      padding-top: 0.5rem;
+      padding-left: 0.5rem;
+      font-size: 0.8rem;
+    }
+
     textarea {
       transition: height 0.15s ease-out;
       width: 100%;
@@ -109,6 +121,21 @@ main {
         height: 5rem;
       }
     }
+  }
+}
+
+aside {
+  position: fixed;
+  min-width: 20rem;
+  right: 1rem;
+  @include text-background;
+  border-radius: 0.4rem;
+  padding: 0.5rem;
+  overflow-y: auto;
+  max-height: 80vh;
+
+  &.hidden {
+    display: none;
   }
 }
 
@@ -162,5 +189,62 @@ h1 {
 
   .card-list {
     text-transform: capitalize;
+  }
+}
+
+#filters {
+  #pulled-cards-section {
+    transition: height 150ms ease-out, padding 150ms ease-out;
+
+    h3 {
+      margin-top: 0;
+    }
+
+    #pulled-cards {
+      text-transform: capitalize;
+    }
+
+    &.hidden {
+      height: 0;
+      overflow: hidden;
+      padding: 0;
+    }
+  }
+
+  #no-filters-applied {
+    transition: height 150ms ease-out;
+    font-style: italic;
+    margin-left: 1rem;
+
+    &.hidden {
+      height: 0;
+      overflow: hidden;
+    }
+  }
+}
+
+@media screen and (min-width: 40rem) and (max-width: 80rem) {
+  main {
+    form {
+      max-width: 30rem;
+      margin-left: 1rem;
+      margin-right: 22rem;
+    }
+
+    aside {
+      margin-right: 1rem;
+    }
+  }
+}
+
+@media screen and (min-width: 85rem) {
+  main {
+    aside {
+      margin-right: 1rem;
+    }
+  }
+
+  .card-list {
+    background: cyan;
   }
 }
