@@ -26,6 +26,9 @@ jobs:
       - name: Installing my packages
         run: npm ci
 
+      - name: Test
+        run: npm run test
+
       - name: Build my App
         run: npm run build && touch ./dist/.nojekyll
 
