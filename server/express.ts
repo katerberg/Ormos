@@ -13,6 +13,8 @@ export function setup(): express.Express {
       'http://127.0.0.1:9080',
       'http://0.0.0.0:9080',
       'http://192.168.50.132:9080',
+      'https://katerberg.github.io',
+      'http://katerberg.github.io',
     ];
     const {origin} = req.headers;
     if (origin) {
