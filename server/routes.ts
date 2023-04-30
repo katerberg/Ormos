@@ -10,6 +10,20 @@ const db = new sqlite3.Database('./data/AllPrintings.sqlite', (err) => {
   console.log('connected to db');
 });
 
+function trimPercentages(dirtyCard: string): string {
+  return dirtyCard.replace(/^%/, '').replace(/%$/, '');
+}
+
+function matchesDatabaseResult(databaseName: string, cardName: string): boolean {
+  const strippedCardName = trimPercentages(cardName.toLowerCase());
+  const lowerDatabase = databaseName.toLowerCase();
+  return (
+    strippedCardName === lowerDatabase ||
+    strippedCardName === lowerDatabase.replace(/^.*\/\/ /, '') ||
+    strippedCardName === lowerDatabase.replace(/ \/\/.*$/, '')
+  );
+}
+
 async function getCardInfo(cardName: string): Promise<SetsForCardsResponseData> {
   const promise = new Promise<SetsForCardsResponseData>((resolvePromise, rejectPromise): void => {
     db.all(
@@ -29,26 +43,30 @@ async function getCardInfo(cardName: string): Promise<SetsForCardsResponseData> 
           GROUP BY code, parentCode
            `,
       [cardName],
-      (err, result: {parentCode: string | null; code: string; setName: string; releaseDate: Date}[]) => {
+      (err, result: {name: string; parentCode: string | null; code: string; setName: string; releaseDate: Date}[]) => {
         if (err) {
           console.error(err.message);
           rejectPromise(`Unknown error. Contact creator about "${cardName}".`);
         }
-        if (result.length === 0) {
-          resolvePromise({
+        const sets = result
+          .filter((r) => matchesDatabaseResult(r.name, cardName))
+          .map((r) => ({
+            cardName: r.name,
+            code: r.code,
+            parent: r.parentCode,
+            name: r.setName,
+            releaseDate: r.releaseDate,
+          }));
+        if (sets.length === 0) {
+          return resolvePromise({
             name: cardName,
             sets: [],
           });
         }
 
         resolvePromise({
-          name: cardName,
-          sets: result.map((r) => ({
-            code: r.code,
-            parent: r.parentCode,
-            name: r.setName,
-            releaseDate: r.releaseDate,
-          })),
+          name: sets[0].cardName,
+          sets,
         });
       },
     );
@@ -68,10 +86,18 @@ async function getCards(requestCards: string[]): Promise<{cards: SetsForCardsRes
     if (result.sets.length !== 0) {
       cards.push(result);
     } else {
-      //get dfcs, push the sets, if none, then push errors
       errorCards.push(result.name);
     }
   });
+
+  if (requestCards.length && !requestCards[0].startsWith('%')) {
+    const fuzzyResults = await getCards(errorCards.map((c) => `%${c}%`));
+    return {
+      cards: [...cards, ...fuzzyResults.cards],
+      errorCards: fuzzyResults.errorCards.map((ec) => trimPercentages(ec)),
+    };
+  }
+
   return {cards, errorCards};
 }
 
