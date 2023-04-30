@@ -2,8 +2,12 @@
   box-sizing: border-box;
 }
 
+:root {
+  --text-bg-color: rgb(225 234 240 / 80%);
+}
+
 @mixin text-background {
-  background: rgb(225 234 240 / 80%);
+  background: var(--text-bg-color);
 }
 
 @mixin blue-background {
@@ -51,6 +55,12 @@
     8em 8em, 8em 8em, cover;
 }
 
+@mixin button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.5rem;
+}
+
 @font-face {
   font-family: 'Libre Franklin';
   font-style: normal;
@@ -86,12 +96,9 @@ main {
   }
 
   input[type="submit"] {
-    font-family: inherit;
-    font-size: 1rem;
-    padding: 0.5rem;
+    @include button;
     margin: 0.75rem 0 0.75rem auto;
   }
-
 
   #card-input-label {
     width: 100%;
@@ -223,6 +230,41 @@ h1 {
   }
 }
 
+@keyframes placeholderShimmer {
+  0% {
+    background-position: -468px 0;
+  }
+
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton {
+  border-radius: 0.4rem;
+
+  background: var(--text-bg-color);
+  background-image: linear-gradient(to right, var(--text-bg-color) 0%, rgba(213 214 216 / 80%) 20%, var(--text-bg-color) 40%, var(--text-bg-color) 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 804px;
+  position: relative;
+
+  animation-duration: 1s;
+  animation-fill-mode: forwards;
+  animation-iteration-count: infinite;
+  animation-name: placeholderShimmer;
+  animation-timing-function: linear;
+
+  &.hidden {
+    display: none;
+  }
+}
+
+.search-skeleton {
+  width: 100%;
+  height: 400px;
+}
+
 @media screen and (min-width: 40rem) and (max-width: 80rem) {
   main {
     form {
@@ -244,6 +286,8 @@ h1 {
     }
   }
 
-  .card-list {
+  .list-card {
+    padding: 0.5rem 0;
+    display: block;
   }
 }

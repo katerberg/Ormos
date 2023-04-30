@@ -2,7 +2,7 @@ import './index.scss';
 import {SetsForCardsResponseData} from '../shared/sharedTypes';
 import {fetchSetsForCards} from './api';
 import {SetOfCards, SetsForCardsResponse} from './sharedTypes';
-import {getLines, trimLine} from './textUtils';
+import {getLines, hashCode, trimLine} from './textUtils';
 
 function sortingFunction(a: SetOfCards, b: SetOfCards): -1 | 0 | 1 {
   const aLength = Object.keys(a.cards).length;
@@ -13,6 +13,50 @@ function sortingFunction(a: SetOfCards, b: SetOfCards): -1 | 0 | 1 {
     return 1;
   }
   return a.releaseDate < b.releaseDate ? 1 : -1;
+}
+
+function populatePulledCards(): void {
+  const noFiltersAppliedSection = document.getElementById('no-filters-applied');
+  const pulledCards = document.getElementById('pulled-cards');
+  const pulledCardsSection = document.getElementById('pulled-cards-section');
+  if (!pulledCards || !pulledCardsSection || !noFiltersAppliedSection) {
+    return;
+  }
+  if (globalThis.pulledCards.length) {
+    pulledCardsSection.classList.remove('hidden');
+    noFiltersAppliedSection.classList.add('hidden');
+  } else {
+    pulledCardsSection.classList.add('hidden');
+    noFiltersAppliedSection.classList.remove('hidden');
+  }
+  pulledCards.innerHTML = globalThis.pulledCards.map((card) => `<div>${card}</div>`).join('');
+}
+
+function populateCheckboxes(cardName: string, checked: boolean): void {
+  const inputs = document.getElementsByTagName('input');
+  for (let i = 0; i < inputs.length; i++) {
+    if (inputs[i].getAttribute('data-card-name') === cardName) {
+      inputs[i].checked = checked;
+    }
+  }
+}
+
+function rollUpClickListener(e: Event): void {
+  const target = e.target as HTMLInputElement;
+  if (target?.labels) {
+    const text = target.labels[0] ? target.labels[0].textContent : '';
+    if (!text) {
+      return;
+    }
+    const isPulled = !globalThis.pulledCards.includes(text);
+    if (isPulled) {
+      globalThis.pulledCards.push(text);
+    } else {
+      globalThis.pulledCards = globalThis.pulledCards.filter((pc) => pc !== text);
+    }
+    populatePulledCards();
+    populateCheckboxes(text, isPulled);
+  }
 }
 
 function populateRollUp(data: SetsForCardsResponseData[]): void {
@@ -46,16 +90,26 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
           (set) => `
         <details open>
           <summary>${set.code} - ${set.displayName}</summary>
-          <ul class="card-list">${Object.keys(set.cards)
+          <div class="card-list">${Object.keys(set.cards)
             .sort((a, b) => (a < b ? -1 : 1))
-            .map((card) => `<li class="list-card">${card}</li>`)
-            .join('')}</ul>
+            .map((card) => {
+              const inputId = `${hashCode(card + set.displayName)}`;
+              return `<label for="${inputId}" class="list-card"><input class="card-checkbox" type="checkbox" id="${inputId}" name="${inputId}" data-card-name="${card}" />${card}</label>`;
+            })
+            .join('')}</div>
         </details>
         `,
         )
         .join('')}
     </div>
     `;
+
+  const inputs = document.getElementsByTagName('input');
+  for (let i = 0; i < inputs.length; i++) {
+    if (inputs[i].className.includes('card-checkbox')) {
+      inputs[i].addEventListener('click', rollUpClickListener);
+    }
+  }
 }
 
 function handleSetsForCardsResponse(result: SetsForCardsResponse): void {
@@ -96,27 +150,18 @@ async function submitListener(e: Event): Promise<void> {
     const cleanedInput = getLines(cardInput.value).map(trimLine).join('\n');
     cardInput.value = cleanedInput;
 
+    const loader = document.getElementById('loader-search') as HTMLElement;
+    if (loader) {
+      loader.classList.remove('hidden');
+    }
+
     const response = await fetchSetsForCards(cleanedInput);
+    if (loader) {
+      loader.classList.add('hidden');
+    }
     globalThis.latestSetsForCardsResponse = response;
     handleSetsForCardsResponse(response);
   }
-}
-
-function populatePulledCards(): void {
-  const noFiltersAppliedSection = document.getElementById('no-filters-applied');
-  const pulledCards = document.getElementById('pulled-cards');
-  const pulledCardsSection = document.getElementById('pulled-cards-section');
-  if (!pulledCards || !pulledCardsSection || !noFiltersAppliedSection) {
-    return;
-  }
-  if (globalThis.pulledCards.length) {
-    pulledCardsSection.classList.remove('hidden');
-    noFiltersAppliedSection.classList.add('hidden');
-  } else {
-    pulledCardsSection.classList.add('hidden');
-    noFiltersAppliedSection.classList.remove('hidden');
-  }
-  pulledCards.innerHTML = globalThis.pulledCards.map((card) => `<div>${card}</div>`).join('');
 }
 
 function clearPulledCardsListener(e: Event): void {
@@ -126,24 +171,11 @@ function clearPulledCardsListener(e: Event): void {
   handleSetsForCardsResponse(globalThis.latestSetsForCardsResponse);
 }
 
-function rollUpClickListener(e: Event): void {
-  const target = e.target as HTMLElement;
-  if (target && target.matches('li.list-card') && target.textContent) {
-    if (!globalThis.pulledCards.includes(target.textContent)) {
-      globalThis.pulledCards.push(target.textContent);
-      populatePulledCards();
-      handleSetsForCardsResponse(globalThis.latestSetsForCardsResponse);
-    }
-  }
-}
-
 window.addEventListener('load', () => {
   globalThis.pulledCards = [];
   const cardSearchForm = document.getElementById('card-search-form');
   const clearPulledCardsButton = document.getElementById('clear-pulled-cards');
-  const rollUp = document.getElementById('card-search-roll-up');
 
   cardSearchForm?.addEventListener('submit', submitListener);
   clearPulledCardsButton?.addEventListener('click', clearPulledCardsListener);
-  rollUp?.addEventListener('click', rollUpClickListener);
 });
