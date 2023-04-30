@@ -56,6 +56,25 @@ async function getCardInfo(cardName: string): Promise<SetsForCardsResponseData> 
   return promise;
 }
 
+async function getCards(requestCards: string[]): Promise<{cards: SetsForCardsResponseData[]; errorCards: string[]}> {
+  const cards: SetsForCardsResponseData[] = [];
+  const errorCards: string[] = [];
+  const requestPromises: Promise<unknown>[] = [];
+  requestCards.forEach((requestCard) => {
+    requestPromises.push(getCardInfo(requestCard));
+  });
+  const promiseResults = await Promise.all(requestPromises);
+  (promiseResults as SetsForCardsResponseData[]).forEach((result) => {
+    if (result.sets.length !== 0) {
+      cards.push(result);
+    } else {
+      //get dfcs, push the sets, if none, then push errors
+      errorCards.push(result.name);
+    }
+  });
+  return {cards, errorCards};
+}
+
 export function addRoutes(app: express.Express): void {
   const jsonParser = bodyParser.json();
 
@@ -65,26 +84,14 @@ export function addRoutes(app: express.Express): void {
       return res.status(400).send({data: null, error: 'Too many cards'});
     }
 
-    const cards: SetsForCardsResponseData[] = [];
-    const errorCards: string[] = [];
-    const requestPromises: Promise<unknown>[] = [];
-    requestCards.forEach((requestCard) => {
-      requestPromises.push(getCardInfo(requestCard));
-    });
-    let promiseResults;
+    let cards, errorCards;
     try {
-      promiseResults = await Promise.all(requestPromises);
+      ({cards, errorCards} = await getCards(requestCards));
     } catch (e) {
       console.error(`Unknown issue in promise for cards: ${requestCards}:`, e);
       return res.status(500).send({data: null, error: 'Unknown error. Contact creator.'});
     }
-    (promiseResults as SetsForCardsResponseData[]).forEach((result) => {
-      if (result.sets.length === 0) {
-        errorCards.push(result.name);
-      } else {
-        cards.push(result);
-      }
-    });
+
     if (errorCards.length) {
       const errorString = `Cards not found: “${errorCards.reduce((a, c) => `${a}”,“${c}`)}”`;
       return res.status(400).send({data: null, error: errorString});
