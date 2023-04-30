@@ -10,6 +10,17 @@
   background: var(--text-bg-color);
 }
 
+@mixin helper-text {
+  transition: height 150ms ease-out;
+  font-style: italic;
+  margin-left: 1rem;
+
+  &.hidden {
+    height: 0;
+    overflow: hidden;
+  }
+}
+
 @mixin blue-background {
   background:
     radial-gradient(at bottom right,
@@ -132,19 +143,34 @@ main {
 }
 
 aside {
-  position: fixed;
-  min-width: 20rem;
-  right: 1rem;
-  @include text-background;
-  border-radius: 0.4rem;
-  padding: 0.5rem;
-  overflow-y: auto;
-  max-height: 80vh;
+  &#filters {
+    position: fixed;
+    min-width: 20rem;
+    right: 1rem;
+    @include text-background;
+    border-radius: 0.4rem;
+    padding: 0.5rem;
+    overflow-y: auto;
+    max-height: 80vh;
+  }
+
+  &#sets-summary {
+    display: none;
+    position: fixed;
+    min-width: 20rem;
+    left: 1rem;
+    @include text-background;
+    border-radius: 0.4rem;
+    padding: 0.5rem;
+    overflow-y: auto;
+    max-height: 80vh;
+  }
 
   &.hidden {
     display: none;
   }
 }
+
 
 h1 {
   margin-bottom: 1rem;
@@ -223,13 +249,25 @@ h1 {
   }
 
   #no-filters-applied {
-    transition: height 150ms ease-out;
-    font-style: italic;
-    margin-left: 1rem;
+    @include helper-text();
+  }
+}
 
-    &.hidden {
-      height: 0;
-      overflow: hidden;
+#sets-summary {
+  .set-summary-row {
+    padding: 0.25rem 0;
+
+    &:before {
+      content: "»";
+    }
+
+    a:link {
+      text-decoration: none;
+    }
+
+    a:visited {
+      text-decoration: none;
+      color: #0000ee;
     }
   }
 }
@@ -269,6 +307,11 @@ h1 {
   height: 400px;
 }
 
+.list-card {
+  padding: 0.5rem 0;
+  display: block;
+}
+
 @media screen and (min-width: 40rem) and (max-width: 80rem) {
   main {
     form {
@@ -277,7 +320,7 @@ h1 {
       margin-right: 22rem;
     }
 
-    aside {
+    aside#filters {
       margin-right: 1rem;
     }
   }
@@ -285,13 +328,17 @@ h1 {
 
 @media screen and (min-width: 85rem) {
   main {
-    aside {
+
+    aside#filters {
       margin-right: 1rem;
     }
-  }
 
-  .list-card {
-    padding: 0.5rem 0;
-    display: block;
+    aside#sets-summary {
+      display: block;
+
+      &.hidden {
+        display: none;
+      }
+    }
   }
 }

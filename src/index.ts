@@ -59,6 +59,17 @@ function rollUpClickListener(e: Event): void {
   }
 }
 
+function populateSetsList(sets: {code: string; name: string}[]): void {
+  const setsSummaryList = document.getElementById('sets-summary-list');
+  if (!setsSummaryList) {
+    return;
+  }
+
+  setsSummaryList.innerHTML = `${sets
+    .map((s) => `<div class="set-summary-row"><a href="#${s.code}">${s.code} - ${s.name}</a></div>`)
+    .join('')}`;
+}
+
 function populateRollUp(data: SetsForCardsResponseData[]): void {
   const rollUp = document.getElementById('card-search-roll-up');
   if (!rollUp) {
@@ -82,14 +93,15 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
         sets[code].cards[card.name] = true;
       });
     });
+
+  const sortedSets = Object.entries(sets).sort(([, a], [, b]) => sortingFunction(a, b));
   rollUp.innerHTML = `
     <div class="set-list">
-      ${Object.values(sets)
-        .sort(sortingFunction)
+      ${sortedSets
         .map(
-          (set) => `
+          ([, set]) => `
         <details open>
-          <summary>${set.code} - ${set.displayName}</summary>
+          <summary id="${set.code}">${set.code} - ${set.displayName}</summary>
           <div class="card-list">${Object.keys(set.cards)
             .sort((a, b) => (a < b ? -1 : 1))
             .map((card) => {
@@ -103,6 +115,8 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
         .join('')}
     </div>
     `;
+
+  populateSetsList(sortedSets.map(([code, {displayName}]) => ({code, name: displayName})));
 
   const inputs = document.getElementsByTagName('input');
   for (let i = 0; i < inputs.length; i++) {
@@ -127,6 +141,8 @@ async function submitListener(e: Event): Promise<void> {
 
   const filtersSection = document.getElementById('filters');
   filtersSection?.classList.remove('hidden');
+  const setsSummary = document.getElementById('sets-summary');
+  setsSummary?.classList.remove('hidden');
 
   const cardInput = document.getElementById('card-input') as HTMLInputElement;
   const validationMessage = document.getElementById('validation-message');
