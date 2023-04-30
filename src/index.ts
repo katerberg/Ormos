@@ -113,18 +113,11 @@ function populateRollUp(data: SetsForCardsResponseData[]): void {
 }
 
 function handleSetsForCardsResponse(result: SetsForCardsResponse): void {
-  const cardTextArea = document.getElementById('card-input');
-  if (cardTextArea) {
-    cardTextArea.classList.remove('collapsed');
-  }
   const validationMessage = document.getElementById('validation-message');
   if (result.error && validationMessage) {
     validationMessage.classList.add('error');
     validationMessage.textContent = result.error;
     return;
-  }
-  if (cardTextArea) {
-    cardTextArea.classList.add('collapsed');
   }
   populateRollUp(result.data);
 }
@@ -151,13 +144,24 @@ async function submitListener(e: Event): Promise<void> {
     cardInput.value = cleanedInput;
 
     const loader = document.getElementById('loader-search') as HTMLElement;
+    const rollUp = document.getElementById('card-search-roll-up');
     if (loader) {
       loader.classList.remove('hidden');
+    }
+    if (rollUp) {
+      rollUp.classList.add('hidden');
+    }
+    const cardTextArea = document.getElementById('card-input');
+    if (cardTextArea) {
+      cardTextArea.classList.add('collapsed');
     }
 
     const response = await fetchSetsForCards(cleanedInput);
     if (loader) {
       loader.classList.add('hidden');
+    }
+    if (rollUp) {
+      rollUp.classList.remove('hidden');
     }
     globalThis.latestSetsForCardsResponse = response;
     handleSetsForCardsResponse(response);
